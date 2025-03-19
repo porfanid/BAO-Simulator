@@ -57,18 +57,6 @@
             margin-top: 20px;
             line-height: 1.5;
         }
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.8);
-            transform: translate(-50%, -50%);
-        }
-        .sound-wave {
-            position: absolute;
-            border: 2px solid rgba(65, 105, 225, 0.5);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-        }
         button {
             padding: 8px 16px;
             background-color: #3498db;
@@ -84,264 +72,216 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Baryon Acoustic Oscillations Simulator</h1>
-        
-        <div class="controls">
-    <div class="control-group">
-        <label for="particles">Number of particles: <span id="particles-value">500</span></label>
-        <input type="range" id="particles" min="100" max="20000" value="500" step="100">
+<div class="container">
+    <h1>Baryon Acoustic Oscillations Simulator</h1>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="particles">Number of particles: <span id="particles-value">500</span></label>
+            <input type="range" id="particles" min="100" max="20000" value="500" step="100">
+        </div>
+        <div class="control-group">
+            <label for="speed">Simulation speed: <span id="speed-value">5</span></label>
+            <input type="range" id="speed" min="1" max="10" value="5">
+        </div>
+        <div class="control-group">
+            <label for="density">Initial density: <span id="density-value">5</span></label>
+            <input type="range" id="density" min="1" max="10" value="5">
+        </div>
+        <button id="start-btn">Start Simulation</button>
+        <button id="reset-btn">Reset</button>
     </div>
-    <div class="control-group">
-        <label for="speed">Simulation speed: <span id="speed-value">5</span></label>
-        <input type="range" id="speed" min="1" max="10" value="5">
+
+    <div class="simulation-area">
+        <canvas id="simulation-canvas" width="800" height="400"></canvas>
     </div>
-    <div class="control-group">
-        <label for="density">Initial density: <span id="density-value">5</span></label>
-        <input type="range" id="density" min="1" max="10" value="5">
+
+    <div class="info-panel">
+        <div id="time-elapsed">Time elapsed: 0 Myr</div>
+        <div id="scale-factor">Scale factor: 1.0</div>
     </div>
-    <button id="start-btn">Start Simulation</button>
-    <button id="reset-btn">Reset</button>
+
+    <div class="explanation">
+        <h3>What are Baryon Acoustic Oscillations?</h3>
+        <p>Baryon Acoustic Oscillations (BAO) are fluctuations in the density of visible baryonic matter in the universe, resulting from acoustic waves in the primordial plasma of the early universe. These oscillations left an imprint on the distribution of galaxies we observe today.</p>
+
+        <p>In this simulation:</p>
+        <ul>
+            <li>White dots represent baryons (normal matter)</li>
+            <li>Blue circles represent pressure waves (sound waves) in the primordial plasma</li>
+            <li>As the universe expands (simulation progresses), watch how the initial overdensities create characteristic patterns</li>
+        </ul>
+
+        <p>The simulation starts with random density fluctuations and shows how acoustic waves propagate through the early universe plasma, creating the characteristic BAO pattern that we observe in galaxy surveys today.</p>
+    </div>
 </div>
 
-        
-        <div class="simulation-area" id="simulation"></div>
-        
-        <div class="info-panel">
-            <div id="time-elapsed">Time elapsed: 0 Myr</div>
-            <div id="scale-factor">Scale factor: 1.0</div>
-        </div>
-        
-        <div class="explanation">
-            <h3>What are Baryon Acoustic Oscillations?</h3>
-            <p>Baryon Acoustic Oscillations (BAO) are fluctuations in the density of visible baryonic matter in the universe, resulting from acoustic waves in the primordial plasma of the early universe. These oscillations left an imprint on the distribution of galaxies we observe today.</p>
-            
-            <p>In this simulation:</p>
-            <ul>
-                <li>White dots represent baryons (normal matter)</li>
-                <li>Blue circles represent pressure waves (sound waves) in the primordial plasma</li>
-                <li>As the universe expands (simulation progresses), watch how the initial overdensities create characteristic patterns</li>
-            </ul>
-            
-            <p>The simulation starts with random density fluctuations and shows how acoustic waves propagate through the early universe plasma, creating the characteristic BAO pattern that we observe in galaxy surveys today.</p>
-        </div>
-        <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
 <script>
-  kofiWidgetOverlay.draw('porfanid', {
-    'type': 'floating-chat',
-    'floating-chat.donateButton.text': 'Support me',
-    'floating-chat.donateButton.background-color': '#00b9fe',
-    'floating-chat.donateButton.text-color': '#fff'
-  });
-</script>
-    </div>
+    const canvas = document.getElementById('simulation-canvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('start-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const particlesSlider = document.getElementById('particles');
+    const speedSlider = document.getElementById('speed');
+    const densitySlider = document.getElementById('density');
+    const timeElapsed = document.getElementById('time-elapsed');
+    const scaleFactor = document.getElementById('scale-factor');
 
-    <script>
-        const simulationArea = document.getElementById('simulation');
-        const startBtn = document.getElementById('start-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const particlesSlider = document.getElementById('particles');
-        const speedSlider = document.getElementById('speed');
-        const densitySlider = document.getElementById('density');
-        const timeElapsed = document.getElementById('time-elapsed');
-        const scaleFactor = document.getElementById('scale-factor');
-        
-        const particlesValue = document.getElementById('particles-value');
-        const speedValue = document.getElementById('speed-value');
-        const densityValue = document.getElementById('density-value');
-        
-        // Add event listeners for real-time updates
-        particlesSlider.addEventListener('input', () => {
-            particlesValue.textContent = particlesSlider.value;
-        });
+    const particlesValue = document.getElementById('particles-value');
+    const speedValue = document.getElementById('speed-value');
+    const densityValue = document.getElementById('density-value');
 
-        speedSlider.addEventListener('input', () => {
-            speedValue.textContent = speedSlider.value;
-        });
+    particlesSlider.addEventListener('input', () => {
+        particlesValue.textContent = particlesSlider.value;
+    });
 
-        densitySlider.addEventListener('input', () => {
-            densityValue.textContent = densitySlider.value;
-        });
-        
-        let particles = [];
-        let soundWaves = [];
-        let isRunning = false;
-        let animationId;
-        let timeInMyr = 0;
-        let currentScaleFactor = 1.0;
-        
-        // Initialize simulation
-        function initSimulation() {
-            particles = [];
-            soundWaves = [];
-            timeInMyr = 0;
-            currentScaleFactor = 1.0;
-            simulationArea.innerHTML = '';
-            
-            const particleCount = parseInt(particlesSlider.value);
-            const density = parseInt(densitySlider.value);
-            const width = simulationArea.offsetWidth;
-            const height = simulationArea.offsetHeight;
-            
-            // Create overdensity regions
-            const overdensities = [];
-            for (let i = 0; i < 5; i++) {
-                overdensities.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    strength: Math.random() * 0.5 + 0.5
-                });
-            }
-            
-            // Create particles
-            for (let i = 0; i < particleCount; i++) {
-                let x, y;
-                let influencedByOverdensity = Math.random() < 0.7;
-                
-                if (influencedByOverdensity) {
-                    const randomOverdensity = overdensities[Math.floor(Math.random() * overdensities.length)];
-                    const distance = Math.random() * 100 * (1 / density);
-                    const angle = Math.random() * Math.PI * 2;
-                    x = randomOverdensity.x + Math.cos(angle) * distance;
-                    y = randomOverdensity.y + Math.sin(angle) * distance;
-                } else {
-                    x = Math.random() * width;
-                    y = Math.random() * height;
-                }
-                
-                const size = Math.random() * 2 + 1;
-                createParticle(x, y, size);
-            }
-            
-            // Create initial sound waves at overdensities
-            overdensities.forEach(overdensity => {
-                createSoundWave(overdensity.x, overdensity.y, 0);
-            });
-            
-            updateInfo();
-        }
-        
-        function createParticle(x, y, size) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-            particle.style.left = x + 'px';
-            particle.style.top = y + 'px';
-            simulationArea.appendChild(particle);
-            
-            particles.push({
-                element: particle,
-                x: x,
-                y: y,
-                originalX: x,
-                originalY: y,
-                size: size
+    speedSlider.addEventListener('input', () => {
+        speedValue.textContent = speedSlider.value;
+    });
+
+    densitySlider.addEventListener('input', () => {
+        densityValue.textContent = densitySlider.value;
+    });
+
+    let particles = [];
+    let soundWaves = [];
+    let isRunning = false;
+    let animationId;
+    let timeInMyr = 0;
+    let currentScaleFactor = 1.0;
+
+    function initSimulation() {
+        particles = [];
+        soundWaves = [];
+        timeInMyr = 0;
+        currentScaleFactor = 1.0;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const particleCount = parseInt(particlesSlider.value);
+        const density = parseInt(densitySlider.value);
+        const width = canvas.width;
+        const height = canvas.height;
+
+        const overdensities = [];
+        for (let i = 0; i < 5; i++) {
+            overdensities.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                strength: Math.random() * 0.5 + 0.5
             });
         }
-        
-        function createSoundWave(x, y, initialRadius) {
-            const wave = document.createElement('div');
-            wave.className = 'sound-wave';
-            wave.style.left = x + 'px';
-            wave.style.top = y + 'px';
-            wave.style.width = initialRadius * 2 + 'px';
-            wave.style.height = initialRadius * 2 + 'px';
-            simulationArea.appendChild(wave);
-            
-            soundWaves.push({
-                element: wave,
-                x: x,
-                y: y,
-                radius: initialRadius,
-                maxRadius: Math.min(simulationArea.offsetWidth, simulationArea.offsetHeight) * 0.5
-            });
-        }
-        
-        function updateSimulation() {
-            if (!isRunning) return;
-            
-            const speed = parseInt(speedSlider.value);
-            timeInMyr += speed * 10;
-            currentScaleFactor = 1 + (timeInMyr / 1000) * 0.5;
-            
-            // Update sound waves
-            soundWaves.forEach(wave => {
-                // Sound waves expand
-                wave.radius += speed * 2;
-                wave.element.style.width = wave.radius * 2 + 'px';
-                wave.element.style.height = wave.radius * 2 + 'px';
-                
-                // Remove waves that have reached their maximum radius
-                if (wave.radius > wave.maxRadius) {
-                    simulationArea.removeChild(wave.element);
-                    soundWaves = soundWaves.filter(w => w !== wave);
-                }
-            });
-            
-            // Update particles
-            particles.forEach(particle => {
-                // Particles are influenced by passing sound waves
-                soundWaves.forEach(wave => {
-                    const dx = particle.x - wave.x;
-                    const dy = particle.y - wave.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // If the particle is near the edge of the wave front
-                    const waveFrontThickness = 20;
-                    if (Math.abs(distance - wave.radius) < waveFrontThickness) {
-                        const pushFactor = 0.5 * (1 - Math.abs(distance - wave.radius) / waveFrontThickness);
-                        const angle = Math.atan2(dy, dx);
-                        particle.x += Math.cos(angle) * pushFactor * speed;
-                        particle.y += Math.sin(angle) * pushFactor * speed;
-                    }
-                });
-                
-                // Universe expansion effect
-                const centerX = simulationArea.offsetWidth / 2;
-                const centerY = simulationArea.offsetHeight / 2;
-                const dx = particle.x - centerX;
-                const dy = particle.y - centerY;
-                
-                particle.x = centerX + dx * currentScaleFactor;
-                particle.y = centerY + dy * currentScaleFactor;
-                
-                // Update particle position
-                particle.element.style.left = particle.x + 'px';
-                particle.element.style.top = particle.y + 'px';
-            });
-            
-            updateInfo();
-            animationId = requestAnimationFrame(updateSimulation);
-        }
-        
-        function updateInfo() {
-            timeElapsed.textContent = `Time elapsed: ${timeInMyr.toFixed(0)} Myr`;
-            scaleFactor.textContent = `Scale factor: ${currentScaleFactor.toFixed(2)}`;
-        }
-        
-        // Event listeners
-        startBtn.addEventListener('click', () => {
-            if (!isRunning) {
-                isRunning = true;
-                startBtn.textContent = 'Pause';
-                updateSimulation();
+
+        for (let i = 0; i < particleCount; i++) {
+            let x, y;
+            let influencedByOverdensity = Math.random() < 0.7;
+
+            if (influencedByOverdensity) {
+                const randomOverdensity = overdensities[Math.floor(Math.random() * overdensities.length)];
+                const distance = Math.random() * 100 * (1 / density);
+                const angle = Math.random() * Math.PI * 2;
+                x = randomOverdensity.x + Math.cos(angle) * distance;
+                y = randomOverdensity.y + Math.sin(angle) * distance;
             } else {
-                isRunning = false;
-                startBtn.textContent = 'Resume';
-                cancelAnimationFrame(animationId);
+                x = Math.random() * width;
+                y = Math.random() * height;
+            }
+
+            const size = Math.random() * 2 + 1;
+            particles.push({ x, y, size });
+        }
+
+        overdensities.forEach(overdensity => {
+            soundWaves.push({
+                x: overdensity.x,
+                y: overdensity.y,
+                radius: 0,
+                maxRadius: Math.min(width, height) * 0.5
+            });
+        });
+
+        updateInfo();
+    }
+
+    function updateSimulation() {
+        if (!isRunning) return;
+
+        const speed = parseInt(speedSlider.value);
+        timeInMyr += speed * 10;
+        currentScaleFactor = 1 + (timeInMyr / 1000) * 0.5;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        soundWaves.forEach(wave => {
+            wave.radius += speed * 2;
+            ctx.beginPath();
+            ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(65, 105, 225, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            if (wave.radius > wave.maxRadius) {
+                soundWaves = soundWaves.filter(w => w !== wave);
             }
         });
-        
-        resetBtn.addEventListener('click', () => {
-            isRunning = false;
-            startBtn.textContent = 'Start Simulation';
-            cancelAnimationFrame(animationId);
-            initSimulation();
+
+        particles.forEach(particle => {
+            soundWaves.forEach(wave => {
+                const dx = particle.x - wave.x;
+                const dy = particle.y - wave.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                const waveFrontThickness = 20;
+                if (Math.abs(distance - wave.radius) < waveFrontThickness) {
+                    const pushFactor = 0.5 * (1 - Math.abs(distance - wave.radius) / waveFrontThickness);
+                    const angle = Math.atan2(dy, dx);
+                    particle.x += Math.cos(angle) * pushFactor * speed;
+                    particle.y += Math.sin(angle) * pushFactor * speed;
+                }
+            });
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const dx = particle.x - centerX;
+            const dy = particle.y - centerY;
+
+            particle.x = centerX + dx * currentScaleFactor;
+            particle.y = centerY + dy * currentScaleFactor;
+
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fill();
         });
-        
-        // Initialize on load
-        window.addEventListener('load', initSimulation);
-    </script>
+
+        updateInfo();
+        animationId = requestAnimationFrame(updateSimulation);
+    }
+
+    function updateInfo() {
+        timeElapsed.textContent = `Time elapsed: ${timeInMyr.toFixed(0)} Myr`;
+        scaleFactor.textContent = `Scale factor: ${currentScaleFactor.toFixed(2)}`;
+    }
+
+    startBtn.addEventListener('click', () => {
+        if (!isRunning) {
+            isRunning = true;
+            startBtn.textContent = 'Pause';
+            updateSimulation();
+        } else {
+            isRunning = false;
+            startBtn.textContent = 'Resume';
+            cancelAnimationFrame(animationId);
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        isRunning = false;
+        startBtn.textContent = 'Start Simulation';
+        cancelAnimationFrame(animationId);
+        initSimulation();
+    });
+
+    window.addEventListener('load', initSimulation);
+</script>
 </body>
 </html>
