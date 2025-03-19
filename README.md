@@ -1,6 +1,6 @@
 # 🌌 Baryon Acoustic Oscillations Simulator
 
-[![License: OSL-3.0](https://img.shields.io/badge/License-OSL_3.0-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: OSL-3.0](https://img.shields.io/badge/License-OSL_3.0-blue.svg)](https://opensource.org/license/osl-3-0-php)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow.svg)](https://www.javascript.com/)
 [![HTML5](https://img.shields.io/badge/HTML-5-orange.svg)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS-3-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/CSS)
@@ -8,6 +8,8 @@
 ## 🚀 Overview
 
 The **Baryon Acoustic Oscillations Simulator** is an interactive web application that visualizes one of cosmology's most fascinating phenomena: the ripples in the distribution of matter originating from sound waves in the early universe. This simulator allows users to explore the fundamental processes that shaped our universe's large-scale structure.
+
+
 
 ## ✨ Features
 
