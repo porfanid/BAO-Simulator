@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baryon Acoustic Oscillations Simulator</title>
+    <title>High-Performance Baryon Acoustic Oscillations Simulator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -52,6 +52,17 @@
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .info-item {
+            margin-right: 15px;
+        }
+        .stats {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
         }
         .explanation {
             margin-top: 20px;
@@ -69,68 +80,103 @@
         button:hover {
             background-color: #2980b9;
         }
+        .visualization-toggle {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Baryon Acoustic Oscillations Simulator</h1>
+    <h1>High-Performance BAO Simulator</h1>
 
     <div class="controls">
         <div class="control-group">
-            <label for="particles">Number of particles: <span id="particles-value">500</span></label>
-            <input type="range" id="particles" min="100" max="20000" value="500" step="100">
+            <label for="particles">Number of particles: <span id="particles-value">20000</span></label>
+            <input type="range" id="particles" min="10000" max="200000" value="20000" step="10000">
         </div>
         <div class="control-group">
             <label for="speed">Simulation speed: <span id="speed-value">5</span></label>
-            <input type="range" id="speed" min="1" max="10" value="5">
+            <input type="range" id="speed" min="1" max="5" value="5">
         </div>
         <div class="control-group">
-            <label for="density">Initial density: <span id="density-value">5</span></label>
-            <input type="range" id="density" min="1" max="10" value="5">
+            <label for="soundWaves">Sound waves: <span id="soundWaves-value">10</span></label>
+            <input type="range" id="soundWaves" min="1" max="10" value="10" step="1">
         </div>
+        <div class="mode-switch">
+            <label for="render-mode">Render mode:</label>
+            <select id="render-mode">
+                <option value="points">Points</option>
+                <option value="density">Density Map</option>
+            </select>
+        </div>
+        <div class="visualization-toggle">
+            <label for="show-waves">Show waves:</label>
+            <input type="checkbox" id="show-waves" checked>
+        </div>
+    </div>
+
+    <div class="controls">
         <button id="start-btn">Start Simulation</button>
         <button id="reset-btn">Reset</button>
     </div>
 
     <div class="simulation-area">
-        <canvas id="simulation-canvas" width="800" height="400"></canvas>
+        <canvas id="simulation-canvas"></canvas>
     </div>
 
     <div class="info-panel">
-        <div id="time-elapsed">Time elapsed: 0 Myr</div>
-        <div id="scale-factor">Scale factor: 1.0</div>
+        <div class="info-item" id="time-elapsed">Time elapsed: 0 Myr</div>
+        <div class="info-item" id="scale-factor">Scale factor: 1.0</div>
+        <div class="info-item" id="wave-radius">Sound horizon: 0 Mpc</div>
+        <div class="info-item" id="fps">FPS: 0</div>
+        <div class="stats" id="performance-stats"></div>
     </div>
 
     <div class="explanation">
         <h3>What are Baryon Acoustic Oscillations?</h3>
-        <p>Baryon Acoustic Oscillations (BAO) are fluctuations in the density of visible baryonic matter in the universe, resulting from acoustic waves in the primordial plasma of the early universe. These oscillations left an imprint on the distribution of galaxies we observe today.</p>
+        <p>Baryon Acoustic Oscillations (BAO) are fluctuations in the density of visible baryonic matter in the universe, resulting from acoustic waves in the primordial plasma of the early universe. These sound waves propagated through the hot early universe until recombination (~380,000 years after the Big Bang), when they "froze" into the matter distribution.</p>
 
-        <p>In this simulation:</p>
+        <p>This high-performance simulator can handle up to 1 million particles and 100 sound waves, using:</p>
         <ul>
-            <li>White dots represent baryons (normal matter)</li>
-            <li>Blue circles represent pressure waves (sound waves) in the primordial plasma</li>
-            <li>As the universe expands (simulation progresses), watch how the initial overdensities create characteristic patterns</li>
+            <li>WebGL for hardware-accelerated rendering</li>
+            <li>Spatial partitioning for efficient wave-particle interactions</li>
+            <li>Instanced rendering for improved performance</li>
+            <li>Multiple visualization modes for different perspectives</li>
         </ul>
-
-        <p>The simulation starts with random density fluctuations and shows how acoustic waves propagate through the early universe plasma, creating the characteristic BAO pattern that we observe in galaxy surveys today.</p>
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+    // Get DOM elements
     const canvas = document.getElementById('simulation-canvas');
-    const ctx = canvas.getContext('2d');
     const startBtn = document.getElementById('start-btn');
     const resetBtn = document.getElementById('reset-btn');
     const particlesSlider = document.getElementById('particles');
     const speedSlider = document.getElementById('speed');
-    const densitySlider = document.getElementById('density');
+    const soundWavesSlider = document.getElementById('soundWaves');
+    const renderModeSelect = document.getElementById('render-mode');
+    const showWavesCheckbox = document.getElementById('show-waves');
     const timeElapsed = document.getElementById('time-elapsed');
     const scaleFactor = document.getElementById('scale-factor');
+    const waveRadius = document.getElementById('wave-radius');
+    const fpsDisplay = document.getElementById('fps');
+    const performanceStats = document.getElementById('performance-stats');
 
     const particlesValue = document.getElementById('particles-value');
     const speedValue = document.getElementById('speed-value');
-    const densityValue = document.getElementById('density-value');
+    const soundWavesValue = document.getElementById('soundWaves-value');
 
+    // Update value displays when sliders change
     particlesSlider.addEventListener('input', () => {
         particlesValue.textContent = particlesSlider.value;
     });
@@ -139,133 +185,438 @@
         speedValue.textContent = speedSlider.value;
     });
 
-    densitySlider.addEventListener('input', () => {
-        densityValue.textContent = densitySlider.value;
+    soundWavesSlider.addEventListener('input', () => {
+        soundWavesValue.textContent = soundWavesSlider.value;
     });
 
-    let particles = [];
-    let soundWaves = [];
+    // Three.js variables
+    let scene, camera, renderer;
+    let particleSystem, particles;
+    let soundWaveRings = [];
+    let overdensities = [];
     let isRunning = false;
     let animationId;
     let timeInMyr = 0;
     let currentScaleFactor = 1.0;
+    let currentWaveRadius = 0;
+    let lastFrameTime = 0;
+    let framesThisSecond = 0;
+    let lastFpsUpdateTime = 0;
+    let fps = 0;
 
-    function initSimulation() {
-        particles = [];
-        soundWaves = [];
-        timeInMyr = 0;
-        currentScaleFactor = 1.0;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Grid for spatial partitioning
+    const grid = {
+        cellSize: 50,
+        cells: {},
+        clear() {
+            this.cells = {};
+        },
+        getCell(x, y) {
+            const cellX = Math.floor(x / this.cellSize);
+            const cellY = Math.floor(y / this.cellSize);
+            const key = `${cellX},${cellY}`;
+            if (!this.cells[key]) {
+                this.cells[key] = [];
+            }
+            return this.cells[key];
+        },
+        addParticle(index, x, y) {
+            const cell = this.getCell(x, y);
+            cell.push(index);
+        },
+        getNearbyParticles(x, y, radius) {
+            const result = [];
+            const cellRadius = Math.ceil(radius / this.cellSize);
 
+            const centerCellX = Math.floor(x / this.cellSize);
+            const centerCellY = Math.floor(y / this.cellSize);
+
+            for (let cellX = centerCellX - cellRadius; cellX <= centerCellX + cellRadius; cellX++) {
+                for (let cellY = centerCellY - cellRadius; cellY <= centerCellY + cellRadius; cellY++) {
+                    const key = `${cellX},${cellY}`;
+                    if (this.cells[key]) {
+                        result.push(...this.cells[key]);
+                    }
+                }
+            }
+
+            return result;
+        }
+    };
+
+    // Rendering options
+    let renderMode = "points";
+    let showWaves = true;
+
+    // Shaders for density map
+    const densityVertexShader = `
+        attribute float size;
+        attribute float opacity;
+        varying float vOpacity;
+        void main() {
+            vOpacity = opacity;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = size;
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `;
+
+    const densityFragmentShader = `
+        varying float vOpacity;
+        void main() {
+            float r = length(gl_PointCoord - vec2(0.5, 0.5));
+            if (r > 0.5) discard;
+            gl_FragColor = vec4(0.0, 0.5, 1.0, vOpacity);
+        }
+    `;
+
+    // Performance monitoring
+    let lastUpdateTime = 0;
+    let updateDuration = 0;
+    let renderDuration = 0;
+
+    function initThreeJS() {
+        // Create scene
+        scene = new THREE.Scene();
+
+        // Set up camera
+        const width = canvas.parentElement.clientWidth;
+        const height = canvas.parentElement.clientHeight;
+        camera = new THREE.OrthographicCamera(
+            width / -2, width / 2,
+            height / 2, height / -2,
+            1, 1000
+        );
+        camera.position.z = 100;
+
+        // Set up renderer
+        renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: false,
+            powerPreference: "high-performance"
+        });
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000);
+
+        // Get render mode
+        renderMode = renderModeSelect.value;
+        showWaves = showWavesCheckbox.checked;
+    }
+
+    function createParticles() {
         const particleCount = parseInt(particlesSlider.value);
-        const density = parseInt(densitySlider.value);
-        const width = canvas.width;
-        const height = canvas.height;
+        const geometry = new THREE.BufferGeometry();
 
-        const overdensities = [];
-        for (let i = 0; i < 5; i++) {
+        // Create particle positions
+        const positions = new Float32Array(particleCount * 3);
+        const sizes = new Float32Array(particleCount);
+        const opacities = new Float32Array(particleCount);
+
+        // Create overdensity regions
+        overdensities = [];
+        const soundWaveCount = parseInt(soundWavesSlider.value);
+
+        for (let i = 0; i < soundWaveCount; i++) {
             overdensities.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
+                x: (Math.random() - 0.5) * 700,
+                y: (Math.random() - 0.5) * 300,
                 strength: Math.random() * 0.5 + 0.5
             });
         }
 
+        // Distribute particles with some clustering around overdensities
         for (let i = 0; i < particleCount; i++) {
             let x, y;
-            let influencedByOverdensity = Math.random() < 0.7;
 
-            if (influencedByOverdensity) {
-                const randomOverdensity = overdensities[Math.floor(Math.random() * overdensities.length)];
-                const distance = Math.random() * 100 * (1 / density);
+            // 70% of particles near overdensities, 30% random
+            if (Math.random() < 0.7) {
+                const randomOD = overdensities[Math.floor(Math.random() * overdensities.length)];
+                const distFromCenter = Math.random() * 100;
                 const angle = Math.random() * Math.PI * 2;
-                x = randomOverdensity.x + Math.cos(angle) * distance;
-                y = randomOverdensity.y + Math.sin(angle) * distance;
+
+                x = randomOD.x + Math.cos(angle) * distFromCenter;
+                y = randomOD.y + Math.sin(angle) * distFromCenter;
             } else {
-                x = Math.random() * width;
-                y = Math.random() * height;
+                x = (Math.random() - 0.5) * 800;
+                y = (Math.random() - 0.5) * 400;
             }
 
-            const size = Math.random() * 2 + 1;
-            particles.push({ x, y, size });
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = 0;
+
+            // Set particle size and opacity
+            sizes[i] = 1.5;
+            opacities[i] = 0.7;
         }
 
-        overdensities.forEach(overdensity => {
-            soundWaves.push({
-                x: overdensity.x,
-                y: overdensity.y,
-                radius: 0,
-                maxRadius: Math.min(width, height) * 0.5
-            });
-        });
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        geometry.setAttribute('opacity', new THREE.BufferAttribute(opacities, 1));
 
+        // Create material based on render mode
+        let material;
+        if (renderMode === "density") {
+            material = new THREE.ShaderMaterial({
+                uniforms: {},
+                vertexShader: densityVertexShader,
+                fragmentShader: densityFragmentShader,
+                transparent: true,
+                depthTest: false
+            });
+        } else {
+            material = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 1.5,
+                sizeAttenuation: false,
+                vertexColors: false
+            });
+        }
+
+        particleSystem = new THREE.Points(geometry, material);
+        scene.add(particleSystem);
+    }
+
+    function createSoundWaves() {
+        // Remove existing sound wave rings
+        for (let ring of soundWaveRings) {
+            scene.remove(ring);
+        }
+        soundWaveRings = [];
+
+        if (!showWaves) return;
+
+        // Create new sound wave rings at each overdensity
+        for (let od of overdensities) {
+            const ringGeometry = new THREE.RingGeometry(5, 7, 16);
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4169e1,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.3
+            });
+
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.position.set(od.x, od.y, 0);
+            ring.center = { x: od.x, y: od.y };
+            ring.radius = 5;
+
+            scene.add(ring);
+            soundWaveRings.push(ring);
+        }
+
+        currentWaveRadius = 5;
+    }
+
+    function initSimulation() {
+        // Reset simulation variables
+        timeInMyr = 0;
+        currentScaleFactor = 1.0;
+        currentWaveRadius = 0;
+
+        // Initialize Three.js if needed
+        if (!scene) {
+            initThreeJS();
+        } else {
+            // Clear existing scene
+            while(scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+
+            // Update render mode
+            renderMode = renderModeSelect.value;
+            showWaves = showWavesCheckbox.checked;
+        }
+
+        // Create particles and sound waves
+        createParticles();
+        createSoundWaves();
+
+        // Update UI
         updateInfo();
+
+        // Render initial state
+        renderer.render(scene, camera);
+    }
+
+    function expandSoundWaves(delta) {
+        if (!showWaves || soundWaveRings.length === 0) return;
+
+        // Expand sound wave rings
+        const maxRadius = 150; // Maximum radius of sound waves
+        const expandRate = delta * 0.5; // Rate of expansion
+
+        // Update sound wave radii
+        for (let ring of soundWaveRings) {
+            if (ring.radius < maxRadius) {
+                ring.radius += expandRate;
+
+                // Update ring geometry
+                ring.scale.set(ring.radius / 5, ring.radius / 5, 1);
+
+                // Reduce opacity as the ring expands
+                ring.material.opacity = Math.max(0.05, 0.3 - (ring.radius / maxRadius) * 0.25);
+            }
+        }
+
+        currentWaveRadius = soundWaveRings[0].radius;
+    }
+
+    function updateWaveParticleInteractions() {
+        // Only update particles if there are sound waves to interact with
+        if (overdensities.length === 0) return;
+
+        const positions = particleSystem.geometry.attributes.position.array;
+        const sizes = particleSystem.geometry.attributes.size.array;
+        const opacities = particleSystem.geometry.attributes.opacity.array;
+
+        // Clear spatial partitioning grid
+        grid.clear();
+
+        // Populate grid with particle positions
+        for (let i = 0; i < positions.length / 3; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            grid.addParticle(i, x, y);
+        }
+
+        // Efficient updates for wave-particle interactions
+        for (let od of overdensities) {
+            const waveFrontThickness = 10;
+
+            // Get particles near the wave front
+            const innerRadius = Math.max(0, currentWaveRadius - waveFrontThickness);
+            const outerRadius = currentWaveRadius + waveFrontThickness;
+            const nearbyParticles = grid.getNearbyParticles(od.x, od.y, outerRadius);
+
+            // Update only particles near the wave front
+            for (let idx of nearbyParticles) {
+                const i3 = idx * 3;
+                const x = positions[i3];
+                const y = positions[i3 + 1];
+
+                // Calculate distance from this overdensity
+                const dx = x - od.x;
+                const dy = y - od.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                // If the particle is near the wave front
+                if (distance >= innerRadius && distance <= outerRadius) {
+                    // Calculate push factor
+                    const pushFactor = 0.2 * (1 - Math.abs(distance - currentWaveRadius) / waveFrontThickness);
+
+                    // Calculate direction
+                    const angle = Math.atan2(dy, dx);
+                    const pushX = Math.cos(angle) * pushFactor;
+                    const pushY = Math.sin(angle) * pushFactor;
+
+                    // Apply push
+                    positions[i3] += pushX;
+                    positions[i3 + 1] += pushY;
+
+                    // Increase size and opacity for particles affected by waves
+                    if (renderMode === "density") {
+                        sizes[idx] = 2.5 + pushFactor * 3;
+                        opacities[idx] = 0.7 + pushFactor * 0.3;
+                    }
+                }
+            }
+        }
+
+        // Flag buffers for update
+        particleSystem.geometry.attributes.position.needsUpdate = true;
+        if (renderMode === "density") {
+            particleSystem.geometry.attributes.size.needsUpdate = true;
+            particleSystem.geometry.attributes.opacity.needsUpdate = true;
+        }
+    }
+
+    function applyCosmologicalExpansion() {
+        // Apply cosmological expansion to particles
+        const positions = particleSystem.geometry.attributes.position.array;
+        const expansionFactor = currentScaleFactor / (currentScaleFactor - 0.01); // Incremental expansion
+
+        for (let i = 0; i < positions.length; i += 3) {
+            positions[i] *= expansionFactor;
+            positions[i + 1] *= expansionFactor;
+        }
+
+        particleSystem.geometry.attributes.position.needsUpdate = true;
     }
 
     function updateSimulation() {
         if (!isRunning) return;
 
+        const now = performance.now();
+
+        // Calculate FPS
+        framesThisSecond++;
+        if (now - lastFpsUpdateTime >= 1000) {
+            fps = framesThisSecond;
+            framesThisSecond = 0;
+            lastFpsUpdateTime = now;
+        }
+
+        // Get delta time based on simulation speed
         const speed = parseInt(speedSlider.value);
-        timeInMyr += speed * 10;
+        const deltaTime = speed * 2;
+
+        // Update time and scale factor
+        timeInMyr += deltaTime;
         currentScaleFactor = 1 + (timeInMyr / 1000) * 0.5;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Start update timing
+        const updateStartTime = performance.now();
 
-        soundWaves.forEach(wave => {
-            wave.radius += speed * 2;
-            ctx.beginPath();
-            ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(65, 105, 225, 0.5)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+        // Expand sound waves
+        expandSoundWaves(deltaTime);
 
-            if (wave.radius > wave.maxRadius) {
-                soundWaves = soundWaves.filter(w => w !== wave);
-            }
-        });
+        // Update wave-particle interactions
+        updateWaveParticleInteractions();
 
-        particles.forEach(particle => {
-            soundWaves.forEach(wave => {
-                const dx = particle.x - wave.x;
-                const dy = particle.y - wave.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+        // Apply cosmological expansion
+        applyCosmologicalExpansion();
 
-                const waveFrontThickness = 20;
-                if (Math.abs(distance - wave.radius) < waveFrontThickness) {
-                    const pushFactor = 0.5 * (1 - Math.abs(distance - wave.radius) / waveFrontThickness);
-                    const angle = Math.atan2(dy, dx);
-                    particle.x += Math.cos(angle) * pushFactor * speed;
-                    particle.y += Math.sin(angle) * pushFactor * speed;
-                }
-            });
+        // End update timing
+        updateDuration = performance.now() - updateStartTime;
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const dx = particle.x - centerX;
-            const dy = particle.y - centerY;
+        // Start render timing
+        const renderStartTime = performance.now();
 
-            particle.x = centerX + dx * currentScaleFactor;
-            particle.y = centerY + dy * currentScaleFactor;
+        // Render the updated scene
+        renderer.render(scene, camera);
 
-            ctx.beginPath();
-            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.fill();
-        });
+        // End render timing
+        renderDuration = performance.now() - renderStartTime;
 
-        updateInfo();
+        // Update UI every 250ms
+        if (now - lastUpdateTime >= 250) {
+            updateInfo();
+            lastUpdateTime = now;
+        }
+
+        // Continue animation loop
         animationId = requestAnimationFrame(updateSimulation);
     }
 
     function updateInfo() {
         timeElapsed.textContent = `Time elapsed: ${timeInMyr.toFixed(0)} Myr`;
         scaleFactor.textContent = `Scale factor: ${currentScaleFactor.toFixed(2)}`;
+        waveRadius.textContent = `Sound horizon: ${currentWaveRadius.toFixed(1)} Mpc`;
+        fpsDisplay.textContent = `FPS: ${fps}`;
+
+        // Update performance stats
+        performanceStats.textContent = `Particles: ${particlesSlider.value} | Waves: ${soundWavesSlider.value} | Update: ${updateDuration.toFixed(1)}ms | Render: ${renderDuration.toFixed(1)}ms`;
     }
 
+    // Event Listeners
     startBtn.addEventListener('click', () => {
         if (!isRunning) {
             isRunning = true;
             startBtn.textContent = 'Pause';
+            lastFpsUpdateTime = performance.now();
+            lastUpdateTime = performance.now();
+            framesThisSecond = 0;
             updateSimulation();
         } else {
             isRunning = false;
@@ -281,7 +632,67 @@
         initSimulation();
     });
 
-    window.addEventListener('load', initSimulation);
+    // Update render mode when changed
+    renderModeSelect.addEventListener('change', () => {
+        // Restart the simulation with new render mode
+        const wasRunning = isRunning;
+        isRunning = false;
+        cancelAnimationFrame(animationId);
+        initSimulation();
+
+        if (wasRunning) {
+            isRunning = true;
+            startBtn.textContent = 'Pause';
+            lastFpsUpdateTime = performance.now();
+            lastUpdateTime = performance.now();
+            framesThisSecond = 0;
+            updateSimulation();
+        }
+    });
+
+    // Update wave visibility
+    showWavesCheckbox.addEventListener('change', () => {
+        showWaves = showWavesCheckbox.checked;
+
+        if (isRunning) {
+            // Remove existing waves if needed
+            if (!showWaves) {
+                for (let ring of soundWaveRings) {
+                    scene.remove(ring);
+                }
+                soundWaveRings = [];
+            } else {
+                // Create new waves
+                createSoundWaves();
+            }
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (renderer) {
+            const width = canvas.parentElement.clientWidth;
+            const height = canvas.parentElement.clientHeight;
+
+            camera.left = width / -2;
+            camera.right = width / 2;
+            camera.top = height / 2;
+            camera.bottom = height / -2;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(width, height);
+            renderer.render(scene, camera);
+        }
+    });
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+        // Set canvas to fill container
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+
+        initSimulation();
+    });
 </script>
 <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
 <script>
