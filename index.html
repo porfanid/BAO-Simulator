@@ -88,21 +88,22 @@
         <h1>Baryon Acoustic Oscillations Simulator</h1>
         
         <div class="controls">
-            <div class="control-group">
-                <label for="particles">Number of particles:</label>
-                <input type="range" id="particles" min="100" max="2000" value="500" step="100">
-            </div>
-            <div class="control-group">
-                <label for="speed">Simulation speed:</label>
-                <input type="range" id="speed" min="1" max="10" value="5">
-            </div>
-            <div class="control-group">
-                <label for="density">Initial density:</label>
-                <input type="range" id="density" min="1" max="10" value="5">
-            </div>
-            <button id="start-btn">Start Simulation</button>
-            <button id="reset-btn">Reset</button>
-        </div>
+    <div class="control-group">
+        <label for="particles">Number of particles: <span id="particles-value">500</span></label>
+        <input type="range" id="particles" min="100" max="20000" value="500" step="100">
+    </div>
+    <div class="control-group">
+        <label for="speed">Simulation speed: <span id="speed-value">5</span></label>
+        <input type="range" id="speed" min="1" max="10" value="5">
+    </div>
+    <div class="control-group">
+        <label for="density">Initial density: <span id="density-value">5</span></label>
+        <input type="range" id="density" min="1" max="10" value="5">
+    </div>
+    <button id="start-btn">Start Simulation</button>
+    <button id="reset-btn">Reset</button>
+</div>
+
         
         <div class="simulation-area" id="simulation"></div>
         
@@ -144,6 +145,23 @@
         const densitySlider = document.getElementById('density');
         const timeElapsed = document.getElementById('time-elapsed');
         const scaleFactor = document.getElementById('scale-factor');
+        
+        const particlesValue = document.getElementById('particles-value');
+        const speedValue = document.getElementById('speed-value');
+        const densityValue = document.getElementById('density-value');
+        
+        // Add event listeners for real-time updates
+        particlesSlider.addEventListener('input', () => {
+            particlesValue.textContent = particlesSlider.value;
+        });
+
+        speedSlider.addEventListener('input', () => {
+            speedValue.textContent = speedSlider.value;
+        });
+
+        densitySlider.addEventListener('input', () => {
+            densityValue.textContent = densitySlider.value;
+        });
         
         let particles = [];
         let soundWaves = [];
