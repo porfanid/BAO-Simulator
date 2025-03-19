@@ -3,7 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>High-Performance Baryon Acoustic Oscillations Simulator</title>
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="High-Performance Baryon Acoustic Oscillations Simulator">
+    <meta name="description" content="Interactive WebGL-based simulator for visualizing Baryon Acoustic Oscillations in the early universe. Explore cosmological sound waves with adjustable parameters.">
+    <meta name="keywords" content="baryon acoustic oscillations, BAO, cosmology simulator, physics simulation, WebGL physics, astronomy visualization, sound waves universe, early universe simulator">
+    <meta name="author" content="Porfanid">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/BAO-Simulator/favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/BAO-Simulator/favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/BAO-Simulator/favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="/BAO-Simulator/favicon_io/site.webmanifest">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://porfanid.github.io/BAO-Simulator/">
+    <meta property="og:title" content="High-Performance Baryon Acoustic Oscillations Simulator">
+    <meta property="og:description" content="Explore cosmological sound waves with this interactive simulator for Baryon Acoustic Oscillations in the early universe.">
+    <meta property="og:image" content="https://porfanid.github.io/BAO-Simulator/logo.jpeg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://porfanid.github.io/BAO-Simulator/">
+    <meta property="twitter:title" content="High-Performance BAO Simulator">
+    <meta property="twitter:description" content="Interactive WebGL-based simulator for visualizing Baryon Acoustic Oscillations in the early universe.">
+    <meta property="twitter:image" content="https://porfanid.github.io/BAO-Simulator/logo.jpeg">
+
+    <!-- Technical Metadata -->
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="theme-color" content="#3498db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Canonical URL -->
+    <meta name="canonical" href="https://porfanid.github.io/BAO-Simulator/">
+
+    <!-- App/Add to home screen metadata -->
+    <meta name="application-name" content="BAO Simulator">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BAO Simulator">
+
+    <!-- Performance hints -->
+    <meta http-equiv="Accept-CH" content="DPR, Width, Viewport-Width">
+
+    <!-- Structured data for Google -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org/",
+            "@type": "SoftwareApplication",
+            "name": "High-Performance Baryon Acoustic Oscillations Simulator",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "description": "Interactive simulator for visualizing Baryon Acoustic Oscillations in the early universe using WebGL and spatial partitioning."
+        }
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -144,6 +209,13 @@
     <div class="explanation">
         <h3>What are Baryon Acoustic Oscillations?</h3>
         <p>Baryon Acoustic Oscillations (BAO) are fluctuations in the density of visible baryonic matter in the universe, resulting from acoustic waves in the primordial plasma of the early universe. These sound waves propagated through the hot early universe until recombination (~380,000 years after the Big Bang), when they "froze" into the matter distribution.</p>
+
+        <p>In this simulation:</p>
+        <ul>
+            <li>White dots represent baryons (normal matter)</li>
+            <li>Blue circles represent pressure waves (sound waves) in the primordial plasma</li>
+            <li>As the universe expands (simulation progresses), watch how the initial overdensities create characteristic patterns</li>
+        </ul>
 
         <p>This high-performance simulator can handle up to 1 million particles and 100 sound waves, using:</p>
         <ul>
