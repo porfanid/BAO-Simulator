@@ -4,6 +4,7 @@
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow.svg)](https://www.javascript.com/)
 [![HTML5](https://img.shields.io/badge/HTML-5-orange.svg)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS-3-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![DOI](https://zenodo.org/badge/951497112.svg)](https://doi.org/10.5281/zenodo.15053975)
 
 ## 🚀 Overview
 
