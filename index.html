@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baryon Acoustic Oscillations Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .simulation-area {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #000;
+        }
+        .info-panel {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .explanation {
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: translate(-50%, -50%);
+        }
+        .sound-wave {
+            position: absolute;
+            border: 2px solid rgba(65, 105, 225, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Baryon Acoustic Oscillations Simulator</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="particles">Number of particles:</label>
+                <input type="range" id="particles" min="100" max="2000" value="500" step="100">
+            </div>
+            <div class="control-group">
+                <label for="speed">Simulation speed:</label>
+                <input type="range" id="speed" min="1" max="10" value="5">
+            </div>
+            <div class="control-group">
+                <label for="density">Initial density:</label>
+                <input type="range" id="density" min="1" max="10" value="5">
+            </div>
+            <button id="start-btn">Start Simulation</button>
+            <button id="reset-btn">Reset</button>
+        </div>
+        
+        <div class="simulation-area" id="simulation"></div>
+        
+        <div class="info-panel">
+            <div id="time-elapsed">Time elapsed: 0 Myr</div>
+            <div id="scale-factor">Scale factor: 1.0</div>
+        </div>
+        
+        <div class="explanation">
+            <h3>What are Baryon Acoustic Oscillations?</h3>
+            <p>Baryon Acoustic Oscillations (BAO) are fluctuations in the density of visible baryonic matter in the universe, resulting from acoustic waves in the primordial plasma of the early universe. These oscillations left an imprint on the distribution of galaxies we observe today.</p>
+            
+            <p>In this simulation:</p>
+            <ul>
+                <li>White dots represent baryons (normal matter)</li>
+                <li>Blue circles represent pressure waves (sound waves) in the primordial plasma</li>
+                <li>As the universe expands (simulation progresses), watch how the initial overdensities create characteristic patterns</li>
+            </ul>
+            
+            <p>The simulation starts with random density fluctuations and shows how acoustic waves propagate through the early universe plasma, creating the characteristic BAO pattern that we observe in galaxy surveys today.</p>
+        </div>
+    </div>
+
+    <script>
+        const simulationArea = document.getElementById('simulation');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const particlesSlider = document.getElementById('particles');
+        const speedSlider = document.getElementById('speed');
+        const densitySlider = document.getElementById('density');
+        const timeElapsed = document.getElementById('time-elapsed');
+        const scaleFactor = document.getElementById('scale-factor');
+        
+        let particles = [];
+        let soundWaves = [];
+        let isRunning = false;
+        let animationId;
+        let timeInMyr = 0;
+        let currentScaleFactor = 1.0;
+        
+        // Initialize simulation
+        function initSimulation() {
+            particles = [];
+            soundWaves = [];
+            timeInMyr = 0;
+            currentScaleFactor = 1.0;
+            simulationArea.innerHTML = '';
+            
+            const particleCount = parseInt(particlesSlider.value);
+            const density = parseInt(densitySlider.value);
+            const width = simulationArea.offsetWidth;
+            const height = simulationArea.offsetHeight;
+            
+            // Create overdensity regions
+            const overdensities = [];
+            for (let i = 0; i < 5; i++) {
+                overdensities.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    strength: Math.random() * 0.5 + 0.5
+                });
+            }
+            
+            // Create particles
+            for (let i = 0; i < particleCount; i++) {
+                let x, y;
+                let influencedByOverdensity = Math.random() < 0.7;
+                
+                if (influencedByOverdensity) {
+                    const randomOverdensity = overdensities[Math.floor(Math.random() * overdensities.length)];
+                    const distance = Math.random() * 100 * (1 / density);
+                    const angle = Math.random() * Math.PI * 2;
+                    x = randomOverdensity.x + Math.cos(angle) * distance;
+                    y = randomOverdensity.y + Math.sin(angle) * distance;
+                } else {
+                    x = Math.random() * width;
+                    y = Math.random() * height;
+                }
+                
+                const size = Math.random() * 2 + 1;
+                createParticle(x, y, size);
+            }
+            
+            // Create initial sound waves at overdensities
+            overdensities.forEach(overdensity => {
+                createSoundWave(overdensity.x, overdensity.y, 0);
+            });
+            
+            updateInfo();
+        }
+        
+        function createParticle(x, y, size) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            simulationArea.appendChild(particle);
+            
+            particles.push({
+                element: particle,
+                x: x,
+                y: y,
+                originalX: x,
+                originalY: y,
+                size: size
+            });
+        }
+        
+        function createSoundWave(x, y, initialRadius) {
+            const wave = document.createElement('div');
+            wave.className = 'sound-wave';
+            wave.style.left = x + 'px';
+            wave.style.top = y + 'px';
+            wave.style.width = initialRadius * 2 + 'px';
+            wave.style.height = initialRadius * 2 + 'px';
+            simulationArea.appendChild(wave);
+            
+            soundWaves.push({
+                element: wave,
+                x: x,
+                y: y,
+                radius: initialRadius,
+                maxRadius: Math.min(simulationArea.offsetWidth, simulationArea.offsetHeight) * 0.5
+            });
+        }
+        
+        function updateSimulation() {
+            if (!isRunning) return;
+            
+            const speed = parseInt(speedSlider.value);
+            timeInMyr += speed * 10;
+            currentScaleFactor = 1 + (timeInMyr / 1000) * 0.5;
+            
+            // Update sound waves
+            soundWaves.forEach(wave => {
+                // Sound waves expand
+                wave.radius += speed * 2;
+                wave.element.style.width = wave.radius * 2 + 'px';
+                wave.element.style.height = wave.radius * 2 + 'px';
+                
+                // Remove waves that have reached their maximum radius
+                if (wave.radius > wave.maxRadius) {
+                    simulationArea.removeChild(wave.element);
+                    soundWaves = soundWaves.filter(w => w !== wave);
+                }
+            });
+            
+            // Update particles
+            particles.forEach(particle => {
+                // Particles are influenced by passing sound waves
+                soundWaves.forEach(wave => {
+                    const dx = particle.x - wave.x;
+                    const dy = particle.y - wave.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // If the particle is near the edge of the wave front
+                    const waveFrontThickness = 20;
+                    if (Math.abs(distance - wave.radius) < waveFrontThickness) {
+                        const pushFactor = 0.5 * (1 - Math.abs(distance - wave.radius) / waveFrontThickness);
+                        const angle = Math.atan2(dy, dx);
+                        particle.x += Math.cos(angle) * pushFactor * speed;
+                        particle.y += Math.sin(angle) * pushFactor * speed;
+                    }
+                });
+                
+                // Universe expansion effect
+                const centerX = simulationArea.offsetWidth / 2;
+                const centerY = simulationArea.offsetHeight / 2;
+                const dx = particle.x - centerX;
+                const dy = particle.y - centerY;
+                
+                particle.x = centerX + dx * currentScaleFactor;
+                particle.y = centerY + dy * currentScaleFactor;
+                
+                // Update particle position
+                particle.element.style.left = particle.x + 'px';
+                particle.element.style.top = particle.y + 'px';
+            });
+            
+            updateInfo();
+            animationId = requestAnimationFrame(updateSimulation);
+        }
+        
+        function updateInfo() {
+            timeElapsed.textContent = `Time elapsed: ${timeInMyr.toFixed(0)} Myr`;
+            scaleFactor.textContent = `Scale factor: ${currentScaleFactor.toFixed(2)}`;
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                startBtn.textContent = 'Pause';
+                updateSimulation();
+            } else {
+                isRunning = false;
+                startBtn.textContent = 'Resume';
+                cancelAnimationFrame(animationId);
+            }
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            isRunning = false;
+            startBtn.textContent = 'Start Simulation';
+            cancelAnimationFrame(animationId);
+            initSimulation();
+        });
+        
+        // Initialize on load
+        window.addEventListener('load', initSimulation);
+    </script>
+</body>
+</html>
